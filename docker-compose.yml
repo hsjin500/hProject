@@ -1,0 +1,75 @@
+version: '3.1'
+
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sh:/docker-entrypoint-initdb.d/init.sh
+
+  django_backend:
+    build: ./django_backend
+    restart: always
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT}
+    command: >
+      sh -c "python manage.py migrate &&
+         python manage.py runserver 0.0.0.0:8100"
+    ports:
+      - "8100:8100"
+    volumes:
+      - ./django_backend/django_api:/app
+    depends_on:
+      - db
+    working_dir: /app
+  
+  node_backend:
+    build: ./node_backend
+    restart: always
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT}
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./node_backend:/app
+      - ./frontend/build:/app/frontend/build  # frontend/build 공유
+    depends_on:
+      - db
+    working_dir: /app
+  
+      #frontend:
+      #build: ./frontend
+      #restart: always
+      #volumes:
+      #- ./frontend:/app
+      #- /app/node_modules
+      #ports:
+      #- "3000:3000"
+      #working_dir: /app
+  
+  nginx:  # 이 부분을 추가
+    image: nginx:latest  # 원하는 Nginx 이미지 버전을 사용
+    ports:
+      - "8080:80"  # 호스트와 컨테이너의 포트를 매핑
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf  # Nginx 설정 파일을 컨테이너에 마운트
+    depends_on:  # Nginx가 의존하는 서비스를 명시
+      - node_backend
+      - django_backend
+        #- frontend
+volumes:
+  postgres_data:
+
