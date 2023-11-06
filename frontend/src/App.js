@@ -27,7 +27,7 @@ function App() {
     formData.append('image', image);
 
     try {
-      const response = await fetch('http://localhost:5000/upload', {
+      const response = await fetch('http://144.24.92.232:5000/upload', {
         method: 'POST',
         body: formData,
       });
