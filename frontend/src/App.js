@@ -24,7 +24,7 @@ function App() {
     // FormData 인스턴스 생성
     const formData = new FormData();
     // 'image' 키에 파일 데이터 추가
-    formData.append('image', image);
+    formData.append('sampleFile', image);
 
     try {
       const response = await fetch('http://144.24.92.232/upload', {

@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const multer = require('multer');
 const cors = require('cors');
-const fileUpload = require('express-fileupload');
+const moment = require('moment');
 const app = express();
 
 const pool = new Pool({
@@ -23,38 +23,30 @@ const initServer = (app) => {
   };
 
   app.use(cors(corsOptions));
-  app.use(fileUpload());
 
   
-  // multer를 사용하여 이미지 저장 설정
+  // 파일 저장을 위한 설정
   const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, 'uploads/'); // 'uploads/' 폴더에 파일 저장
+      cb(null, 'uploads/'); // 저장할 경로
     },
     filename: function (req, file, cb) {
-      // 파일 이름 설정 (여기서는 원본 파일 이름 사용)
-      cb(null, file.originalname);
+      // 파일명 설정 - 'sampleFile-20231106-153052.png'와 같은 형태
+      cb(null, file.fieldname + '-' + moment().format('YYYYMMDD-HHmmss') + path.extname(file.originalname));
     }
   });
 
+  // multer 인스턴스 생성
   const upload = multer({ storage: storage });
 
   // 이미지 업로드를 위한 라우트
-  app.post('/upload', (req, res) => {
-    if (!req.files || Object.keys(req.files).length === 0) {
-      return res.status(400).send('No files were uploaded.');
+  app.post('/upload', upload.single('sampleFile'), (req, res) => {
+    if (!req.file) {
+      return res.status(400).send('No file uploaded.');
     }
-  
-    // 'sampleFile'은 클라이언트에서 input의 name 속성값입니다.
-    let sampleFile = req.files.sampleFile;
-  
-    // 파일을 'uploads/' 폴더 안에 저장합니다.
-    sampleFile.mv(`${__dirname}/uploads/${sampleFile.name}`, (err) => {
-      if (err)
-        return res.status(500).send(err);
-  
-      res.send('File uploaded!');
-    });
+
+    // 업로드된 파일의 정보는 req.file에 있음
+    res.send('File uploaded: ' + req.file.filename);
   });
 
   app.get('/api', (req, res) => {
