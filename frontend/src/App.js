@@ -21,21 +21,24 @@ function App() {
 
   // 이미지 업로드 버튼 클릭 처리
   const handleUpload = async () => {
-    // FormData 인스턴스 생성
     const formData = new FormData();
-    // 'image' 키에 파일 데이터 추가
     formData.append('sampleFile', image);
-
+  
     try {
       const response = await fetch('http://144.24.92.232/upload', {
         method: 'POST',
         body: formData,
       });
-
-      const data = await response.json();
-      if (data.success) {
-        alert('이미지가 성공적으로 업로드 되었습니다!');
+  
+      if (response.ok) { // HTTP 상태 코드가 성공적인지 확인
+        const data = await response.json(); // 이제 안전하게 JSON을 파싱할 수 있음
+        if (data.success) { // 서버의 응답에 'success' 키가 있는지 확인
+          alert('이미지가 성공적으로 업로드 되었습니다!');
+        } else {
+          alert('업로드에 실패했습니다.');
+        }
       } else {
+        console.error('Server responded with status:', response.status);
         alert('업로드에 실패했습니다.');
       }
     } catch (error) {
@@ -43,6 +46,7 @@ function App() {
       alert('업로드 중 에러가 발생했습니다.');
     }
   };
+  
 
 
   return (
