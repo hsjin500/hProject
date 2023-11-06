@@ -42,12 +42,13 @@ const initServer = (app) => {
   // 이미지 업로드를 위한 라우트
   app.post('/upload', upload.single('sampleFile'), (req, res) => {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded.' });
+      // 파일이 업로드되지 않았을 경우
+      res.status(400).json({ success: false, message: 'No file uploaded.' });
+    } else {
+      // 파일 업로드가 성공했을 경우
+      res.json({ success: true, message: 'File uploaded successfully.', filename: req.file.filename });
     }
-  
-    // 업로드된 파일의 정보를 JSON 형태로 반환
-    res.json({ message: 'File uploaded successfully.', filename: req.file.filename });
-  });
+  });  
 
 
   app.get('/api', (req, res) => {
@@ -69,7 +70,7 @@ const initServer = (app) => {
   // React 앱 빌드 폴더를 정적 파일로 설정
   app.use(express.static(path.join(__dirname, '/frontend/build')));
 
-  
+
   // 모든 다른 요청을 React 앱으로 라우팅
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '/frontend/build', 'index.html'));
